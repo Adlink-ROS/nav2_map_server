@@ -46,7 +46,7 @@ MapSaver::MapSaver()
   RCLCPP_INFO(get_logger(), "Creating");
 
   save_map_timeout_ = std::make_shared<rclcpp::Duration>(
-    std::chrono::milliseconds(declare_parameter("save_map_timeout", 2000)));
+    std::chrono::milliseconds(declare_parameter("save_map_timeout", 5000)));
 
   free_thresh_default_ = declare_parameter("free_thresh_default", 0.25),
   occupied_thresh_default_ = declare_parameter("occupied_thresh_default", 0.65);
@@ -173,8 +173,9 @@ bool MapSaver::saveMapTopicToFile(
     // Add new subscription for incoming map topic.
     // Utilizing local rclcpp::Node (rclcpp_node_) from nav2_util::LifecycleNode
     // as a map listener.
+    // Use trasient_local QoS to get the last map.
     auto map_sub = rclcpp_node_->create_subscription<nav_msgs::msg::OccupancyGrid>(
-      map_topic_loc, rclcpp::SystemDefaultsQoS(), mapCallback);
+      map_topic_loc, rclcpp::QoS(1).reliable().transient_local(), mapCallback);
 
     rclcpp::Time start_time = now();
     while (rclcpp::ok()) {
